@@ -21,30 +21,82 @@ use rio::*;
 declare_types! {
   pub class JSRIO for RIO {
     init(mut _cx) {
-            let io = RIO::new();
-            Ok(io)
+      let io = RIO::new();
+      Ok(io)
     }
 
     method open(mut cx) {
-            let mut this = cx.this();
-            let uri :String = cx.argument::<JsString>(0)?.value();
-            let mode_string :String = cx.argument::<JsString>(1)?.value();
-            let mut mode: IoMode = Default::default();
-            for c in mode_string.chars() {
-                match c {
-                    'R' => mode |= IoMode::READ,
-                    'W' => mode |= IoMode::WRITE,
-                    'X' => mode |= IoMode::EXECUTE,
-                     _ => panic!("RIO.open: Invalid Argumeng")
-                }
-            }
-            let guard = cx.lock();
-            let handle = {
-              let mut io = this.borrow_mut(&guard);
-             io.open(&uri, mode).unwrap_or_else(|e| panic! (e.to_string()))
-            };
-            return Ok(cx.number(handle as f64).upcast());
+      let mut this = cx.this();
+      let uri :String = cx.argument::<JsString>(0)?.value();
+      let mode_string :String = cx.argument::<JsString>(1)?.value();
+      let mut mode: IoMode = Default::default();
+      for c in mode_string.chars() {
+        match c {
+            'R' => mode |= IoMode::READ,
+            'W' => mode |= IoMode::WRITE,
+            'X' => mode |= IoMode::EXECUTE,
+            _ => panic!("RIO.open: Invalid Argument")
+        }
+      }
+      let handle = {
+        let guard = cx.lock();
+        let mut io = this.borrow_mut(&guard);
+       io.open(&uri, mode).unwrap_or_else(|e| panic! (e.to_string()))
+      };
+      return Ok(cx.number(handle as f64).upcast());
     }
+    method open_at(mut cx) {
+      let mut this = cx.this();
+      let uri :String = cx.argument::<JsString>(0)?.value();
+      let mode_string :String = cx.argument::<JsString>(1)?.value();
+      let mut mode: IoMode = Default::default();
+      let location :u64 = cx.argument::<JsNumber>(2)?.value() as u64;
+      for c in mode_string.chars() {
+        match c {
+          'R' => mode |= IoMode::READ,
+          'W' => mode |= IoMode::WRITE,
+          'X' => mode |= IoMode::EXECUTE,
+          _ => panic!("RIO.open: Invalid Argument")
+        }
+      }
+      let handle = {
+        let guard = cx.lock();
+        let mut io = this.borrow_mut(&guard);
+       io.open_at(&uri, mode, location).unwrap_or_else(|e| panic! (e.to_string()))
+      };
+      return Ok(cx.number(handle as f64).upcast());
+    }
+    method close(mut cx) {
+      let ret = cx.null().upcast();
+      let mut this = cx.this();
+      let hndl : u64 = cx.argument::<JsNumber>(2)?.value() as u64;
+      let guard = cx.lock();
+      let mut io = this.borrow_mut(&guard); 
+      io.close(hndl).unwrap_or_else(|e| panic! (e.to_string()));
+      return Ok(ret);
+    }
+    method close_all(mut cx) {
+        let ret = cx.null().upcast();
+        let mut this = cx.this();
+        let guard = cx.lock();
+        let mut io = this.borrow_mut(&guard); 
+        io.close_all();
+        return Ok(ret);
+    }
+    method pread(mut cx) {
+      let ret = cx.null().upcast();
+      let mut this = cx.this();
+      let addr = cx.argument::<JsNumber>(0)?.value() as u64;
+      let mut buffer :Handle<JsBuffer> = cx.argument(1)?;
+      let guard = cx.lock();
+      let mut io = this.borrow_mut(&guard);
+      cx.borrow_mut(&mut buffer, |data| {
+        let slice = data.as_mut_slice::<u8>();
+        io.pread(addr, slice).unwrap_or_else(|e| panic! (e.to_string()))
+      });
+      return Ok(ret);
+    }
+    
   }
 }
 register_module!(mut m, { m.export_class::<JSRIO>("RIO") });
