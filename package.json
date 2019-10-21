@@ -1,0 +1,14 @@
+{
+  "name": "rair-node",
+  "version": "0.0.1",
+  "Author": "Oddcoder",
+  "main": "lib/index.js",
+  "license": "LGPL-3.0",
+  "private": false,
+  "dependencies": {
+    "neon-cli": "^0.3.1"
+  },
+  "scripts": {
+    "install": "neon build --release"
+  }
+}

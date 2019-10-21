@@ -1,0 +1,16 @@
+[package]
+name = "neon-class-example"
+version = "0.0.1"
+edition = "2018"
+
+[lib]
+name = "neon_class_example"
+crate-type = ["cdylib"]
+
+[build-dependencies]
+neon-build = "0.3.1"
+
+[dependencies]
+neon = "0.3.1"
+rio = { git ="https://github.com/Rair-Project/rair-core.git"}
+#rio = {path = "../../rair-core/rio"}
